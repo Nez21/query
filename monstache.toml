@@ -1,0 +1,5 @@
+mongo-url = "mongodb://localhost:27017"
+elasticsearch-urls = ["http://localhost:9200"]
+direct-read-namespaces = ["query.query"]
+disable-change-events = true
+exit-after-direct-reads = true
