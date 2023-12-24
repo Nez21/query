@@ -9,9 +9,7 @@ export const intoSelections = (
 ) => {
    if (R.isEmpty(resolvedInfo.fieldsByTypeName)) return {}
 
-   const resourceTreeMap: FieldsByTypeName[any] = Object.values(
-      resolvedInfo.fieldsByTypeName,
-   )[0]
+   const resourceTreeMap: FieldsByTypeName[any] = Object.values(resolvedInfo.fieldsByTypeName)[0]
 
    if (paginated) return intoSelections(resourceTreeMap['items'], target)
 
@@ -19,9 +17,7 @@ export const intoSelections = (
 
    return Object.entries(resourceTreeMap).reduce((acc, [field, tree]) => {
       const [referenceKey, referenceOptions] =
-         Object.entries(definition.references).find(
-            ([, val]) => val.name == field,
-         ) ?? []
+         Object.entries(definition.references).find(([, val]) => val.name == field) ?? []
 
       if (referenceKey)
          return Object.assign(acc, {

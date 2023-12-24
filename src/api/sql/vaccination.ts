@@ -2,13 +2,7 @@ import { Decorate } from 'lib/decorators/decorate.decorator'
 import { Cat } from './cat'
 import { Definition } from 'lib/decorators/definition.decorator'
 import { Property } from 'lib/decorators/property.decorator'
-import {
-   BaseEntity,
-   Column,
-   Entity,
-   ManyToOne,
-   PrimaryGeneratedColumn,
-} from 'typeorm'
+import { BaseEntity, Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 import { Type } from 'class-transformer'
 
 @Definition()

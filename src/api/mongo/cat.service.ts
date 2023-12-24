@@ -8,9 +8,7 @@ import chalk from 'chalk'
 
 @Injectable()
 export class CatService extends BaseService(Cat, MongoAdapter) {
-   async beforeRawQuery(
-      builder: Aggregate<object[]>,
-   ): Promise<Aggregate<object[]>> {
+   async beforeRawQuery(builder: Aggregate<object[]>): Promise<Aggregate<object[]>> {
       console.log(chalk.bgCyanBright('🚀 [Raw Query] '))
       console.log(chalk.cyan(inspect(builder, false, null, true)))
       return builder

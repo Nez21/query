@@ -13,9 +13,7 @@ export type ListFilterInput<T> = {
 }
 
 export const ListFilterInputType = memorize(
-   <T extends object>(
-      target: Constructor<T>,
-   ): Constructor<ListFilterInput<T>> => {
+   <T extends object>(target: Constructor<T>): Constructor<ListFilterInput<T>> => {
       if (cache.has(target.name)) return cache.get(target.name)
 
       const className = `${target.name}ListFilterInput`

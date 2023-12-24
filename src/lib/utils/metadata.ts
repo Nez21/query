@@ -11,11 +11,7 @@ export class Metadata {
       const value = Reflect.getMetadata(metaKey, target, propertyKey)
 
       if (throwIfNotFound && !value) {
-         throw new Error(
-            `Missing metadata ${metaKey.toString()} for ${
-               target.constructor.name
-            }`,
-         )
+         throw new Error(`Missing metadata ${metaKey.toString()} for ${target.constructor.name}`)
       }
 
       return value
@@ -43,12 +39,7 @@ export class Metadata {
       throwIfNotFound = false,
    ): Record<string, T> {
       const prototype = typeof target == 'function' ? target.prototype : target
-      const properties = Metadata.get<string[]>(
-         prototype,
-         META_KEY.Keys,
-         undefined,
-         true,
-      )
+      const properties = Metadata.get<string[]>(prototype, META_KEY.Keys, undefined, true)
       const metadata: Record<string, T> = {}
 
       for (const key of properties) {
@@ -60,11 +51,7 @@ export class Metadata {
       }
 
       if (throwIfNotFound && R.isEmpty(metadata)) {
-         throw new Error(
-            `Missing metadata ${metaKey.toString()} for ${
-               target.constructor.name
-            }`,
-         )
+         throw new Error(`Missing metadata ${metaKey.toString()} for ${target.constructor.name}`)
       }
 
       return metadata

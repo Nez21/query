@@ -17,8 +17,7 @@ export const BaseService = <
 >(
    target: Constructor<TModel>,
    adapterType: Constructor<Adapter<TBuilder>>,
-   contextFactory: (ctx: GqlExecutionContext) => TContext = (ctx) =>
-      ctx as TContext,
+   contextFactory: (ctx: GqlExecutionContext) => TContext = (ctx) => ctx as TContext,
 ) => {
    @Injectable({ scope: Scope.REQUEST })
    class Placeholder {
@@ -31,10 +30,7 @@ export const BaseService = <
          this.ctx = contextFactory(gqlCtx)
       }
 
-      async baseQuery(
-         input: Omit<TQuery, 'paginate'>,
-         selections: Record<string, any>,
-      ) {
+      async baseQuery(input: Omit<TQuery, 'paginate'>, selections: Record<string, any>) {
          input = await this.beforeQuery(input as TQuery)
          let builder = this.adapter.convert(target, input, selections)
          builder = await this.beforeRawQuery(builder)
@@ -61,25 +57,16 @@ export const BaseService = <
          return items
       }
 
-      async paginatedQuery(
-         input: TQuery,
-         info: GraphQLResolveInfo,
-      ): Promise<Paginated<TModel>> {
+      async paginatedQuery(input: TQuery, info: GraphQLResolveInfo): Promise<Paginated<TModel>> {
          if (!input.paginate) {
             throw new BadRequestException()
          }
 
          const selections = this.getSelections(info, true)
          const builder = await this.baseQuery(input, selections)
-         const result = await this.adapter.paginatedQuery(
-            target,
-            builder,
-            input.paginate,
-         )
+         const result = await this.adapter.paginatedQuery(target, builder, input.paginate)
          result.items = await this.afterQuery(
-            result.items.map((item) =>
-               plainToInstance(OutputType(target), item),
-            ),
+            result.items.map((item) => plainToInstance(OutputType(target), item)),
          )
 
          return result

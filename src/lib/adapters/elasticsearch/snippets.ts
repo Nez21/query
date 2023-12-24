@@ -1,9 +1,4 @@
-import {
-   ArrayOperator,
-   BaseOperator,
-   ListOperator,
-   LogicalOperator,
-} from 'lib/constants'
+import { ArrayOperator, BaseOperator, ListOperator, LogicalOperator } from 'lib/constants'
 
 export const MAP_OPERATORS: Record<
    BaseOperator | ArrayOperator,
@@ -16,9 +11,7 @@ export const MAP_OPERATORS: Record<
       bool: { must_not: MAP_OPERATORS.eq(value, path, isText) },
    }),
    exists: (value, path) =>
-      value
-         ? { exists: { field: path } }
-         : { bool: { must_not: { exists: { field: path } } } },
+      value ? { exists: { field: path } } : { bool: { must_not: { exists: { field: path } } } },
    in: (value, path, isText) => ({
       terms: isText ? { [`${path}.keyword`]: value } : { [path]: value },
    }),
@@ -41,18 +34,12 @@ export const MAP_OPERATORS: Record<
    }),
 } as const
 
-export const MAP_LIST_OPERATORS: Record<
-   ListOperator,
-   (query: unknown) => unknown
-> = {
+export const MAP_LIST_OPERATORS: Record<ListOperator, (query: unknown) => unknown> = {
    all: (query) => ({ bool: { must: query } }),
    any: (query) => ({ bool: { should: query } }),
 } as const
 
-export const MAP_LOGICAL_OPERATORS: Record<
-   LogicalOperator,
-   (query: unknown) => unknown
-> = {
+export const MAP_LOGICAL_OPERATORS: Record<LogicalOperator, (query: unknown) => unknown> = {
    and: (query) => ({ bool: { must: query } }),
    or: (query) => ({ bool: { should: query } }),
 } as const

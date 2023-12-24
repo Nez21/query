@@ -25,23 +25,8 @@ export enum SortDirection {
    DESC = 'desc',
 }
 
-export const OPERATORS = [
-   'eq',
-   'neq',
-   'gt',
-   'gte',
-   'lt',
-   'lte',
-   'in',
-   'nin',
-   'exists',
-] as const
-export const ARRAY_OPERATORS = [
-   'contains',
-   'ncontains',
-   'overlap',
-   'exists',
-] as const
+export const OPERATORS = ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'in', 'nin', 'exists'] as const
+export const ARRAY_OPERATORS = ['contains', 'ncontains', 'overlap', 'exists'] as const
 export const LIST_OPERATORS = ['all', 'any'] as const
 export const LOGICAL_OPERATORS = ['and', 'or'] as const
 

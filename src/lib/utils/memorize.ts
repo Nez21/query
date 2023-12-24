@@ -7,9 +7,7 @@ const toString = (el: any) => {
       case 'object':
          if (Array.isArray(el)) return el.map(toString)
          if (el instanceof Date) return el.getTime()
-         return Object.fromEntries(
-            Object.entries(el).map(([k, v]) => [k, toString(v)]),
-         )
+         return Object.fromEntries(Object.entries(el).map(([k, v]) => [k, toString(v)]))
       case 'bigint':
       case 'number':
       case 'string':

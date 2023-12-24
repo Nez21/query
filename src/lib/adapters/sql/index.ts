@@ -1,8 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import {
-   DEFINITION_STORAGE,
-   Definition,
-} from 'lib/decorators/definition.decorator'
+import { DEFINITION_STORAGE, Definition } from 'lib/decorators/definition.decorator'
 import { QueryInput, PaginationInput } from 'lib/generators/query.generator'
 import { Adapter } from 'lib/interfaces/adapter.interface'
 import { Paginated } from 'lib/interfaces/paginated.interface'
@@ -42,9 +39,7 @@ export class SqlAdapter implements Adapter<SelectQueryBuilder<object>> {
       const definition = DEFINITION_STORAGE.get(target)
       const metadata = this.dataSource.getMetadata(target)
       const alias = metadata.tableName
-      const query = this.dataSource
-         .getRepository(target)
-         .createQueryBuilder(alias)
+      const query = this.dataSource.getRepository(target).createQueryBuilder(alias)
 
       const selects = this.buildQuery(
          { filter: input.filter as Record<string, any>, selections },
@@ -75,23 +70,16 @@ export class SqlAdapter implements Adapter<SelectQueryBuilder<object>> {
       path: string[] = [],
    ): string[] {
       const selects = Object.keys(info.definition.properties).reduce(
-         (acc, key) =>
-            input.selections[key] ? [...acc, `${alias}.${key}`] : acc,
+         (acc, key) => (input.selections[key] ? [...acc, `${alias}.${key}`] : acc),
          [],
       )
 
-      selects.push(
-         ...info.metadata.primaryColumns.map(
-            (el) => `${alias}.${el.propertyPath}`,
-         ),
-      )
+      selects.push(...info.metadata.primaryColumns.map((el) => `${alias}.${el.propertyPath}`))
 
       for (const key in info.definition.references) {
          if (!input.selections[key]) continue
 
-         const relation = info.metadata.relations.find(
-            (el) => el.propertyName == key,
-         )
+         const relation = info.metadata.relations.find((el) => el.propertyName == key)
 
          if (!relation) {
             selects.push(`${alias}.${key}`)
@@ -107,10 +95,7 @@ export class SqlAdapter implements Adapter<SelectQueryBuilder<object>> {
 
          const subQuery =
             relationFilter && !R.isEmpty(relationFilter) && reference.array
-               ? this.dataSource.createQueryBuilder(
-                    referenceType,
-                    relationAlias,
-                 )
+               ? this.dataSource.createQueryBuilder(referenceType, relationAlias)
                : null
 
          selects.push(
@@ -134,9 +119,7 @@ export class SqlAdapter implements Adapter<SelectQueryBuilder<object>> {
                subQuery.where(`NOT (${whereExpression})`)
             }
 
-            subQuery
-               .select('1')
-               .andWhere(getJoinCondition(alias, relationAlias, relation))
+            subQuery.select('1').andWhere(getJoinCondition(alias, relationAlias, relation))
             builder.query.innerJoinAndSelect(
                `${alias}.${key}`,
                relationAlias,
@@ -149,21 +132,13 @@ export class SqlAdapter implements Adapter<SelectQueryBuilder<object>> {
       }
 
       if (input.filter && !R.isEmpty(input.filter)) {
-         this.buildWhereClause(
-            builder.subQuery ?? builder.query,
-            input.filter,
-            [alias],
-         )
+         this.buildWhereClause(builder.subQuery ?? builder.query, input.filter, [alias])
       }
 
       return selects
    }
 
-   buildWhereClause(
-      query: WhereExpressionBuilder,
-      filter: Record<string, any>,
-      path: string[],
-   ) {
+   buildWhereClause(query: WhereExpressionBuilder, filter: Record<string, any>, path: string[]) {
       if ('all' in filter) filter = filter['all']
       if ('any' in filter) filter = filter['any']
 
@@ -173,22 +148,14 @@ export class SqlAdapter implements Adapter<SelectQueryBuilder<object>> {
                query,
                (value as unknown[]).map(
                   (el) =>
-                     new Brackets((whereBuilder) =>
-                        this.buildWhereClause(whereBuilder, el, path),
-                     ),
+                     new Brackets((whereBuilder) => this.buildWhereClause(whereBuilder, el, path)),
                ),
             )
-         } else if (
-            OPERATORS.includes(field) ||
-            ARRAY_OPERATORS.includes(field)
-         ) {
+         } else if (OPERATORS.includes(field) || ARRAY_OPERATORS.includes(field)) {
             MAP_OPERATORS[field as BaseOperator | ArrayOperator]({
                query,
                databaseType: this.dataSource.driver.options.type,
-               alias:
-                  path.length > 2
-                     ? R.slice(1, -1, path).join(RELATION_JOINER)
-                     : path[0],
+               alias: path.length > 2 ? R.slice(1, -1, path).join(RELATION_JOINER) : path[0],
                field: R.last(path),
                key: generate({
                   length: 6,
@@ -203,19 +170,11 @@ export class SqlAdapter implements Adapter<SelectQueryBuilder<object>> {
       }
    }
 
-   buildOrderByClause(
-      query: SelectQueryBuilder<any>,
-      input: Record<string, any>[],
-      alias: string,
-   ) {
+   buildOrderByClause(query: SelectQueryBuilder<any>, input: Record<string, any>[], alias: string) {
       for (const orderBy of input) {
-         const [key, value] = Object.entries(flatten(orderBy))[0] as [
-            string,
-            SortDirection,
-         ]
+         const [key, value] = Object.entries(flatten(orderBy))[0] as [string, SortDirection]
          const path = key.split('.')
-         const sortAlias =
-            path.length > 1 ? R.slice(0, -1, path).join(RELATION_JOINER) : alias
+         const sortAlias = path.length > 1 ? R.slice(0, -1, path).join(RELATION_JOINER) : alias
 
          query.addOrderBy(
             `${sortAlias}.${R.last(path)}`,
@@ -241,10 +200,7 @@ export class SqlAdapter implements Adapter<SelectQueryBuilder<object>> {
       paginate: PaginationInput,
    ): Promise<Paginated<T>> {
       builder.skip((paginate.page - 1) * paginate.size).take(paginate.size)
-      const [items, totalItems] = (await builder.getManyAndCount()) as [
-         T[],
-         number,
-      ]
+      const [items, totalItems] = (await builder.getManyAndCount()) as [T[], number]
 
       return {
          items,

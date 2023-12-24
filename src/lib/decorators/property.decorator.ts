@@ -1,16 +1,9 @@
 import { defaultComposer } from 'default-composer'
 import { GraphQLScalarType } from 'graphql'
-import {
-   ARRAY_OPERATORS,
-   ArrayOperator,
-   BaseOperator,
-   META_KEY,
-} from 'lib/constants'
+import { ARRAY_OPERATORS, ArrayOperator, BaseOperator, META_KEY } from 'lib/constants'
 import { Metadata } from 'lib/utils/metadata'
 
-export interface PropertyOptions<
-   T extends Record<string, any> = Record<string, any>,
-> {
+export interface PropertyOptions<T extends Record<string, any> = Record<string, any>> {
    name: string
    type: () => Constructor | GraphQLScalarType
    filterable: boolean | BaseOperator[] | ArrayOperator[]
@@ -35,8 +28,7 @@ export function Property<T extends Record<string, any> = Record<string, any>>(
       if (options?.filterable) {
          if (
             Array.isArray(options.filterable) &&
-            array !=
-               options.filterable.every((el) => ARRAY_OPERATORS.includes(el))
+            array != options.filterable.every((el) => ARRAY_OPERATORS.includes(el))
          ) {
             throw new Error()
          }

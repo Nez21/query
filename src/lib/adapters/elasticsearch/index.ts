@@ -13,11 +13,7 @@ import { flatten } from 'lib/utils/object'
 import R from 'ramda'
 import { getFilterType } from 'lib/utils/filter'
 import merge from 'deepmerge'
-import {
-   MAP_LIST_OPERATORS,
-   MAP_LOGICAL_OPERATORS,
-   MAP_OPERATORS,
-} from './snippets'
+import { MAP_LIST_OPERATORS, MAP_LOGICAL_OPERATORS, MAP_OPERATORS } from './snippets'
 import { mergeConfig } from 'lib/constants'
 import { ESPropMetadata, ESRefMetadata } from './types'
 import { ElasticsearchService } from '@nestjs/elasticsearch'
@@ -44,10 +40,7 @@ export class ElasticsearchAdapter
       builder.source(Object.keys(flatten(selections)))
 
       if (input.filter && !R.isEmpty(input.filter)) {
-         const obj = this.buildQuery(
-            definition,
-            input.filter as Record<string, any>,
-         )
+         const obj = this.buildQuery(definition, input.filter as Record<string, any>)
          const query = new Query(Object.keys(obj)[0])
          query['_body'] = obj
          builder.query(query)
@@ -96,9 +89,7 @@ export class ElasticsearchAdapter
          }
          case 'ListOperator': {
             const [type, value] = Object.entries(input)[0]
-            const query = MAP_LIST_OPERATORS[type](
-               this.buildQuery(definition, value, path),
-            )
+            const query = MAP_LIST_OPERATORS[type](this.buildQuery(definition, value, path))
             result = merge(result, query, mergeConfig)
             break
          }
@@ -107,11 +98,7 @@ export class ElasticsearchAdapter
                const options = definition.properties[
                   R.last(path).split('.').pop()
                ] as PropertyOptions<ESPropMetadata>
-               let query = MAP_OPERATORS[type](
-                  value,
-                  R.last(path),
-                  options.metadata.text,
-               )
+               let query = MAP_OPERATORS[type](value, R.last(path), options.metadata.text)
 
                if (path.length > 1) {
                   let nestedPath = path[0]
@@ -128,25 +115,18 @@ export class ElasticsearchAdapter
          }
          default: {
             for (const [field, value] of Object.entries(input)) {
-               const options = definition.references[
-                  field
-               ] as PropertyOptions<ESRefMetadata>
+               const options = definition.references[field] as PropertyOptions<ESRefMetadata>
 
                result = merge(
                   result,
                   this.buildQuery(
                      definition.references[field]
-                        ? DEFINITION_STORAGE.get(
-                             definition.references[field].type(),
-                          )
+                        ? DEFINITION_STORAGE.get(definition.references[field].type())
                         : definition,
                      value,
                      !path.length || options?.metadata?.nested
                         ? [...path, field]
-                        : [
-                             ...path.slice(0, path.length - 1),
-                             `${R.last(path)}.${field}`,
-                          ],
+                        : [...path.slice(0, path.length - 1), `${R.last(path)}.${field}`],
                   ),
                   mergeConfig,
                )
@@ -160,19 +140,10 @@ export class ElasticsearchAdapter
 
    buildSort(definition: Definition, input: Record<string, any>[]): Sort[] {
       return input.map((el) => {
-         const [field, order] = Object.entries(flatten(el))[0] as [
-            string,
-            string,
-         ]
-         const options = getOptionByPath<ESPropMetadata>(
-            definition,
-            field.split('.'),
-         )
+         const [field, order] = Object.entries(flatten(el))[0] as [string, string]
+         const options = getOptionByPath<ESPropMetadata>(definition, field.split('.'))
 
-         return new Sort(
-            options.metadata.text ? `${field}.keyword` : field,
-            order,
-         )
+         return new Sort(options.metadata.text ? `${field}.keyword` : field, order)
       })
    }
 
@@ -188,9 +159,7 @@ export class ElasticsearchAdapter
          body: builder.toJSON(),
       })
 
-      return result.hits.hits.map(
-         (el) => ({ _id: el._id, ...(el._source as object) }) as T,
-      )
+      return result.hits.hits.map((el) => ({ _id: el._id, ...(el._source as object) }) as T)
    }
 
    async paginatedQuery<T extends object>(
@@ -207,9 +176,7 @@ export class ElasticsearchAdapter
       })
 
       return {
-         items: result.hits.hits.map(
-            (el) => ({ _id: el._id, ...(el._source as object) }) as T,
-         ),
+         items: result.hits.hits.map((el) => ({ _id: el._id, ...(el._source as object) }) as T),
          meta: {
             ...paginate,
             totalItems: result.hits.hits.length,

@@ -1,7 +1,4 @@
-export const flatten = (
-   obj: Record<string, any>,
-   path = '',
-): Record<string, unknown> =>
+export const flatten = (obj: Record<string, any>, path = ''): Record<string, unknown> =>
    Object.keys(obj).reduce((acc, key) => {
       const currentPath = path ? `${path}.${key}` : key
       const value = obj[key]

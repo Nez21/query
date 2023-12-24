@@ -1,9 +1,8 @@
 type Constructor<T = any> = new (...args: any[]) => T
 
-type IsInclude<
-   T extends string | number | symbol,
-   U extends string | number | symbol,
-> = [T] extends [never]
+type IsInclude<T extends string | number | symbol, U extends string | number | symbol> = [
+   T,
+] extends [never]
    ? true
    : { [K in T]: K extends U ? IsInclude<Exclude<T, K>, U> : never }[T]
 

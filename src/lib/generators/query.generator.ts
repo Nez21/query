@@ -1,11 +1,5 @@
 import { Field, InputType, Int } from '@nestjs/graphql'
-import {
-   IsNotEmptyObject,
-   IsOptional,
-   Max,
-   Min,
-   ValidateNested,
-} from 'class-validator'
+import { IsNotEmptyObject, IsOptional, Max, Min, ValidateNested } from 'class-validator'
 import { Type } from 'class-transformer'
 import { FilterInput, FilterInputType } from './filter.generator'
 import { SortInput, SortInputType } from './sort.generator'

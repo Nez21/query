@@ -1,14 +1,6 @@
-import {
-   ArrayOperator,
-   BaseOperator,
-   ListOperator,
-   LogicalOperator,
-} from 'lib/constants'
+import { ArrayOperator, BaseOperator, ListOperator, LogicalOperator } from 'lib/constants'
 
-export const MAP_OPERATORS: Record<
-   BaseOperator | ArrayOperator,
-   (value: unknown) => unknown
-> = {
+export const MAP_OPERATORS: Record<BaseOperator | ArrayOperator, (value: unknown) => unknown> = {
    eq: (value) => ({ $eq: value }),
    neq: (value) => ({ $ne: value }),
    exists: (value) => ({ $exists: value }),
@@ -24,10 +16,7 @@ export const MAP_OPERATORS: Record<
    overlap: (value) => ({ $elemMatch: { $in: value } }),
 } as const
 
-export const MAP_LIST_OPERATORS: Record<
-   ListOperator,
-   (value: unknown) => unknown
-> = {
+export const MAP_LIST_OPERATORS: Record<ListOperator, (value: unknown) => unknown> = {
    all: (value) => {
       const [key, query] = Object.entries(value)[0]
       return {
@@ -39,10 +28,7 @@ export const MAP_LIST_OPERATORS: Record<
    any: (query) => ({ $elemMatch: query }),
 } as const
 
-export const MAP_LOGICAL_OPERATORS: Record<
-   LogicalOperator,
-   (value: unknown) => unknown
-> = {
+export const MAP_LOGICAL_OPERATORS: Record<LogicalOperator, (value: unknown) => unknown> = {
    and: (value) => ({ $and: value }),
    or: (value) => ({ $or: value }),
 } as const

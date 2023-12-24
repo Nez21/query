@@ -13,12 +13,7 @@ export function Decorate(
    options: Omit<DecorateOptions, 'fn'> = { scope: 'all' },
 ): PropertyDecorator {
    return (target: object, propertyKey: string | symbol) =>
-      Metadata.append(
-         target,
-         META_KEY.Decorate,
-         { fn, ...options },
-         propertyKey,
-      )
+      Metadata.append(target, META_KEY.Decorate, { fn, ...options }, propertyKey)
 }
 
 export const applyDecorators = (

@@ -4,19 +4,9 @@ import { Property } from 'lib/decorators/property.decorator'
 import { Reference } from 'lib/decorators/reference.decorator'
 import { Owner } from './owner'
 import { InputType, ObjectType } from '@nestjs/graphql'
-import {
-   OutputType,
-   PaginatedOutputType,
-} from 'lib/generators/output.generator'
+import { OutputType, PaginatedOutputType } from 'lib/generators/output.generator'
 import { QueryInputType } from 'lib/generators/query.generator'
-import {
-   BaseEntity,
-   Column,
-   Entity,
-   ManyToOne,
-   OneToMany,
-   PrimaryGeneratedColumn,
-} from 'typeorm'
+import { BaseEntity, Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
 
 @Definition()
 @Entity({ name: 'cats' })

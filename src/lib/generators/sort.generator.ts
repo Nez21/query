@@ -6,9 +6,7 @@ import { DEFINITION_STORAGE } from 'lib/decorators/definition.decorator'
 import { OneOfObject } from 'lib/utils/validation'
 
 export type SortInput<T extends object> = {
-   [key in keyof T]?: Maybe<
-      T[key] extends object ? SortInput<T[key]> : SortDirection
-   >
+   [key in keyof T]?: Maybe<T[key] extends object ? SortInput<T[key]> : SortDirection>
 }
 
 const cache = new Map()
@@ -28,16 +26,10 @@ export const SortInputType = <T extends object>(
 
    const { properties, references } = DEFINITION_STORAGE.get(target)
 
-   for (const [key, options] of Object.entries(properties).filter(
-      ([_, val]) => val.sortable,
-   )) {
-      Field(() => SortDirection, { nullable: true })(
-         Placeholder.prototype,
-         options.name,
-      )
+   for (const [key, options] of Object.entries(properties).filter(([_, val]) => val.sortable)) {
+      Field(() => SortDirection, { nullable: true })(Placeholder.prototype, options.name)
       OneOfObject('Sort')(Placeholder.prototype, options.name)
-      if (options.name != key)
-         Expose({ name: options.name })(Placeholder.prototype, key)
+      if (options.name != key) Expose({ name: options.name })(Placeholder.prototype, key)
    }
 
    for (const key in references) {
@@ -45,15 +37,11 @@ export const SortInputType = <T extends object>(
 
       if (!options.array) {
          const subSortType = SortInputType(options.type())
-         Field(() => subSortType, { nullable: true })(
-            Placeholder.prototype,
-            options.name,
-         )
+         Field(() => subSortType, { nullable: true })(Placeholder.prototype, options.name)
          Type(() => subSortType)(Placeholder.prototype, options.name)
          ValidateNested()(Placeholder.prototype, options.name)
          OneOfObject('Sort')(Placeholder.prototype, options.name)
-         if (options.name != key)
-            Expose({ name: options.name })(Placeholder.prototype, key)
+         if (options.name != key) Expose({ name: options.name })(Placeholder.prototype, key)
       }
    }
 

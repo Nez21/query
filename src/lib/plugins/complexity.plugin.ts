@@ -1,15 +1,7 @@
 import { Plugin } from '@nestjs/apollo'
 import { GraphQLError, GraphQLSchema } from 'graphql'
-import {
-   fieldExtensionsEstimator,
-   getComplexity,
-   simpleEstimator,
-} from 'graphql-query-complexity'
-import {
-   ApolloServerPlugin,
-   GraphQLRequestListener,
-   GraphQLServerContext,
-} from '@apollo/server'
+import { fieldExtensionsEstimator, getComplexity, simpleEstimator } from 'graphql-query-complexity'
+import { ApolloServerPlugin, GraphQLRequestListener, GraphQLServerContext } from '@apollo/server'
 
 @Plugin()
 export class ComplexityPlugin implements ApolloServerPlugin {
@@ -32,10 +24,7 @@ export class ComplexityPlugin implements ApolloServerPlugin {
                operationName: request.operationName,
                query: document,
                variables: request.variables,
-               estimators: [
-                  fieldExtensionsEstimator(),
-                  simpleEstimator({ defaultComplexity: 1 }),
-               ],
+               estimators: [fieldExtensionsEstimator(), simpleEstimator({ defaultComplexity: 1 })],
             })
 
             if (complexity > maxComplexity) {

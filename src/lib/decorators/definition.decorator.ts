@@ -19,10 +19,7 @@ export const DEFINITION_STORAGE = new Map<Constructor<object>, Definition>()
 
 export function Definition(options?: DefinitionOptions) {
    return (target: Constructor<object>) => {
-      const properties = Metadata.getAllPropertyMetadata<PropertyOptions>(
-         target,
-         META_KEY.Property,
-      )
+      const properties = Metadata.getAllPropertyMetadata<PropertyOptions>(target, META_KEY.Property)
       const references = Metadata.getAllPropertyMetadata<ReferenceOptions>(
          target,
          META_KEY.Reference,
@@ -33,10 +30,7 @@ export function Definition(options?: DefinitionOptions) {
       )
 
       DEFINITION_STORAGE.set(target, {
-         ...defaultComposer<DefinitionOptions>(
-            { name: target.name },
-            options ?? {},
-         ),
+         ...defaultComposer<DefinitionOptions>({ name: target.name }, options ?? {}),
          properties,
          references,
          decorators,
@@ -50,7 +44,4 @@ export const getOptionByPath = <T>(
 ): PropertyOptions<T> =>
    !path.length
       ? (definition.properties[field] as PropertyOptions<T>)
-      : getOptionByPath(
-           DEFINITION_STORAGE.get(definition.references[field].type()),
-           path,
-        )
+      : getOptionByPath(DEFINITION_STORAGE.get(definition.references[field].type()), path)

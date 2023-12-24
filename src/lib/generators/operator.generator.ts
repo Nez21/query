@@ -2,23 +2,14 @@ import { Field, InputType } from '@nestjs/graphql'
 import { BaseOperator } from 'lib/constants'
 import { GraphQLScalarType } from 'graphql'
 import { memorize } from 'lib/utils/memorize'
-import {
-   DecorateOptions,
-   applyDecorators,
-} from 'lib/decorators/decorate.decorator'
+import { DecorateOptions, applyDecorators } from 'lib/decorators/decorate.decorator'
 import { pascalCase } from 'string-ts'
 import { IsOptional } from 'class-validator'
 
 export type OperatorInput<T> = T extends string
    ?
         | {
-             [K in [
-                'exists',
-                'eq',
-                'neq',
-                'in',
-                'nin',
-             ][number]]?: OperatorToType<K, T>
+             [K in ['exists', 'eq', 'neq', 'in', 'nin'][number]]?: OperatorToType<K, T>
           }
         | string
    : T extends number
@@ -41,13 +32,7 @@ export type OperatorInput<T> = T extends string
        ? boolean
        : T extends Date
          ? {
-              [K in [
-                 'exists',
-                 'gt',
-                 'gte',
-                 'lt',
-                 'lte',
-              ][number]]?: OperatorToType<K, T>
+              [K in ['exists', 'gt', 'gte', 'lt', 'lte'][number]]?: OperatorToType<K, T>
            }
          : never
 
@@ -72,10 +57,7 @@ export const OperatorInputType = memorize(
       class Placeholder {}
 
       Object.defineProperty(Placeholder, 'name', { value: className })
-      let operators =
-         typeof filterable == 'boolean' || !filterable.length
-            ? undefined
-            : filterable
+      let operators = typeof filterable == 'boolean' || !filterable.length ? undefined : filterable
       operators ??= mapTypeToDefault(type)
 
       if (operators.length == 1 && operators[0] == 'eq') {
@@ -85,31 +67,16 @@ export const OperatorInputType = memorize(
       for (const operator of operators) {
          switch (operator) {
             case 'exists':
-               Field(() => Boolean, { nullable: true })(
-                  Placeholder.prototype,
-                  operator,
-               )
+               Field(() => Boolean, { nullable: true })(Placeholder.prototype, operator)
                break
             case 'in':
             case 'nin':
-               Field(() => [type], { nullable: true })(
-                  Placeholder.prototype,
-                  operator,
-               )
+               Field(() => [type], { nullable: true })(Placeholder.prototype, operator)
                applyDecorators(Placeholder, operator, decorators, 'input', true)
                break
             default:
-               Field(() => type, { nullable: true })(
-                  Placeholder.prototype,
-                  operator,
-               )
-               applyDecorators(
-                  Placeholder,
-                  operator,
-                  decorators,
-                  'input',
-                  false,
-               )
+               Field(() => type, { nullable: true })(Placeholder.prototype, operator)
+               applyDecorators(Placeholder, operator, decorators, 'input', false)
                break
          }
 
@@ -121,9 +88,7 @@ export const OperatorInputType = memorize(
    (name) => name,
 )
 
-function mapTypeToDefault(
-   type: Constructor | GraphQLScalarType,
-): BaseOperator[] {
+function mapTypeToDefault(type: Constructor | GraphQLScalarType): BaseOperator[] {
    switch (type.name) {
       case 'String':
          return ['exists', 'eq', 'neq', 'in', 'nin']

@@ -9,9 +9,7 @@ import chalk from 'chalk'
 
 @Injectable()
 export class CatService extends BaseService(Cat, SqlAdapter) {
-   async beforeRawQuery(
-      builder: SelectQueryBuilder<object>,
-   ): Promise<SelectQueryBuilder<object>> {
+   async beforeRawQuery(builder: SelectQueryBuilder<object>): Promise<SelectQueryBuilder<object>> {
       console.log(chalk.bgCyanBright('🚀 [Raw Query] '))
       console.log(
          chalk
@@ -19,9 +17,7 @@ export class CatService extends BaseService(Cat, SqlAdapter) {
             .replaceAll(/:(\w{6})/g, (_, key) => ` :${key}`),
       )
       console.log(chalk.bgYellowBright('🚀 [Parameters] '))
-      console.log(
-         chalk.yellow(inspect(builder.getParameters(), false, null, true)),
-      )
+      console.log(chalk.yellow(inspect(builder.getParameters(), false, null, true)))
       return builder
    }
 

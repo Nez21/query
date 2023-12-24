@@ -3,13 +3,7 @@ import { Definition } from 'lib/decorators/definition.decorator'
 import { Property } from 'lib/decorators/property.decorator'
 import { Decorate } from 'lib/decorators/decorate.decorator'
 import { IsEmail } from 'class-validator'
-import {
-   BaseEntity,
-   Column,
-   Entity,
-   OneToMany,
-   PrimaryGeneratedColumn,
-} from 'typeorm'
+import { BaseEntity, Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
 
 @Definition()
 @Entity({ name: 'owners' })
