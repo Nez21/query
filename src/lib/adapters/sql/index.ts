@@ -16,14 +16,16 @@ import {
    ArrayOperator,
    BaseOperator,
    LOGICAL_OPERATORS,
+   ListOperator,
    LogicalOperator,
    OPERATORS,
    SortDirection,
 } from 'lib/constants'
 import { MAP_LOGICAL_OPERATORS, MAP_OPERATORS } from './snippets'
 import { generate } from 'randomstring'
-import { getJoinCondition } from './utils'
 import { flatten } from 'lib/utils/object'
+import { extractRelationFilter, getJoinCondition } from './utils'
+import { RelationMetadata } from 'typeorm/metadata/RelationMetadata'
 
 const RELATION_JOINER = '__'
 
@@ -33,119 +35,153 @@ export class SqlAdapter implements Adapter<SelectQueryBuilder<object>> {
 
    convert<T extends object>(
       target: Constructor<T>,
-      input: Omit<QueryInput<T>, 'paginate'>,
-      selections: Record<string, any>,
+      { filter, sort }: Omit<QueryInput<T>, 'paginate'>,
+      selections: AnyObject,
    ): SelectQueryBuilder<object> {
       const definition = DEFINITION_STORAGE.get(target)
       const metadata = this.dataSource.getMetadata(target)
       const alias = metadata.tableName
-      const query = this.dataSource.getRepository(target).createQueryBuilder(alias)
+      const query = this.dataSource.createQueryBuilder(target, alias)
 
-      const selects = this.buildQuery(
-         { filter: input.filter as Record<string, any>, selections },
-         { query },
-         { definition, metadata },
+      const selects = this.buildQuery({
+         definition,
+         metadata,
+         query,
+         filter: filter as AnyObject,
+         selections,
          alias,
-      )
-      this.buildOrderByClause(query, input.sort ?? [], alias)
+      })
+      this.buildOrderByClause(query, sort ?? [], alias)
       query.select(R.uniq(selects))
 
       return query
    }
 
-   buildQuery(
-      input: {
-         filter: Record<string, any>
-         selections: Record<string, any>
-      },
-      builder: {
-         query: SelectQueryBuilder<object>
-         subQuery?: SelectQueryBuilder<object>
-      },
-      info: {
-         definition: Definition
-         metadata: EntityMetadata
-      },
-      alias: string,
-      path: string[] = [],
-   ): string[] {
-      const selects = Object.keys(info.definition.properties).reduce(
-         (acc, key) => (input.selections[key] ? [...acc, `${alias}.${key}`] : acc),
-         [],
+   buildQuery(input: {
+      filter?: AnyObject
+      selections: AnyObject
+      query: SelectQueryBuilder<any>
+      subQueryCondition?: WhereExpressionBuilder
+      definition: Definition
+      metadata: EntityMetadata
+      alias: string
+      path?: string[]
+   }): string[] {
+      const {
+         definition,
+         metadata,
+         query,
+         subQueryCondition,
+         filter = {},
+         selections,
+         alias,
+         path = [],
+      } = input
+
+      const selects = R.uniq(
+         Object.keys(definition.properties).reduce(
+            (acc, key) => (selections[key] ? [...acc, `${alias}.${key}`] : acc),
+            metadata.primaryColumns.map((el) => `${alias}.${el.propertyPath}`),
+         ),
       )
 
-      selects.push(...info.metadata.primaryColumns.map((el) => `${alias}.${el.propertyPath}`))
+      for (const key in definition.references) {
+         if (!selections[key]) continue
 
-      for (const key in info.definition.references) {
-         if (!input.selections[key]) continue
-
-         const relation = info.metadata.relations.find((el) => el.propertyName == key)
+         const relation = metadata.relations.find((el) => el.propertyName == key)
 
          if (!relation) {
             selects.push(`${alias}.${key}`)
+            continue
          }
 
-         const reference = info.definition.references[key]
+         const reference = definition.references[key]
          const referenceType = reference.type()
-         const subDefinition = DEFINITION_STORAGE.get(referenceType)
+         const referenceDefinition = DEFINITION_STORAGE.get(referenceType)
+
          const nextPath = [...path, key]
          const relationAlias = nextPath.join(RELATION_JOINER)
-         const relationFilter = input.filter[key]
-         delete input.filter[key]
+         const { value: relationFilter, listOperator } = extractRelationFilter(filter, key)
 
-         const subQuery =
-            relationFilter && !R.isEmpty(relationFilter) && reference.array
-               ? this.dataSource.createQueryBuilder(referenceType, relationAlias)
-               : null
-
-         selects.push(
-            ...this.buildQuery(
-               { filter: relationFilter, selections: input.selections[key] },
-               { query: builder.query, subQuery },
-               { definition: subDefinition, metadata: relation.entityMetadata },
-               relationAlias,
-               nextPath,
-            ),
-         )
-
-         if (subQuery) {
-            const isAll = 'all' in relationFilter
-
-            if (isAll) {
-               const whereExpression = subQuery
-                  // @ts-ignore
-                  .createWhereExpression()
-                  .replace(/^.*WHERE/, '')
-               subQuery.where(`NOT (${whereExpression})`)
-            }
-
-            subQuery.select('1').andWhere(getJoinCondition(alias, relationAlias, relation))
-            builder.query.innerJoinAndSelect(
-               `${alias}.${key}`,
-               relationAlias,
-               `${isAll ? 'NOT' : ''} EXISTS(${subQuery.getQuery()})`,
-               subQuery.getParameters(),
+         const recursive = (condition: WhereExpressionBuilder) =>
+            selects.push(
+               ...this.buildQuery({
+                  definition: referenceDefinition,
+                  metadata: relation.inverseEntityMetadata ?? relation.entityMetadata,
+                  query,
+                  subQueryCondition: condition,
+                  filter: relationFilter,
+                  selections: selections[key],
+                  alias: relationAlias,
+                  path: nextPath,
+               }),
             )
+
+         const hasRelationFilter = relationFilter && !R.isEmpty(relationFilter)
+
+         if (hasRelationFilter && reference.array) {
+            const subQuery = this.dataSource.createQueryBuilder(referenceType, relationAlias)
+            query.innerJoin(`${alias}.${key}`, relationAlias)
+            subQuery.where(new Brackets((condition) => recursive(condition)))
+            this.attachSubQueryToJoinCondition({ query, subQuery, relation, listOperator })
+         } else if (hasRelationFilter || !reference.nullable) {
+            query.innerJoin(`${alias}.${key}`, relationAlias)
+            recursive(null)
          } else {
-            builder.query.leftJoinAndSelect(`${alias}.${key}`, relationAlias)
+            query.leftJoin(`${alias}.${key}`, relationAlias)
+            recursive(null)
          }
       }
 
-      if (input.filter && !R.isEmpty(input.filter)) {
-         this.buildWhereClause(builder.subQuery ?? builder.query, input.filter, [alias])
+      if (filter && !R.isEmpty(filter)) {
+         this.buildWhereClause(subQueryCondition ?? query, filter, [alias])
       }
 
       return selects
    }
 
-   buildWhereClause(query: WhereExpressionBuilder, filter: Record<string, any>, path: string[]) {
+   attachSubQueryToJoinCondition(input: {
+      query: SelectQueryBuilder<any>
+      subQuery: SelectQueryBuilder<any>
+      relation: RelationMetadata
+      listOperator: ListOperator
+   }) {
+      const { query, subQuery, relation, listOperator } = input
+
+      const whereExpression = subQuery
+         // @ts-ignore
+         .createWhereExpression()
+         .replace(/^.*WHERE/, '')
+
+      if (relation.isManyToMany) {
+         subQuery.leftJoin(relation.joinTableName, relation.joinTableName, 'TRUE')
+      }
+
+      const joinAttribute = query.expressionMap.joinAttributes.find((el) => el.relation == relation)
+      const alias = joinAttribute.parentAlias
+      const relationAlias = joinAttribute.alias.name
+
+      subQuery.select('1').where(getJoinCondition(alias, relationAlias, relation))
+
+      if (listOperator == 'all') {
+         subQuery.andWhere(`NOT ${whereExpression}`)
+         joinAttribute.condition = `NOT EXISTS(${subQuery.getQuery()})`
+      } else {
+         subQuery.andWhere(whereExpression)
+         joinAttribute.condition = `EXISTS(${subQuery.getQuery()})`
+      }
+
+      query.setParameters(subQuery.getParameters())
+   }
+
+   buildWhereClause(condition: WhereExpressionBuilder, filter: AnyObject, path: string[]) {
       if ('all' in filter) filter = filter['all']
       if ('any' in filter) filter = filter['any']
 
       for (const [field, value] of Object.entries(filter)) {
          if (LOGICAL_OPERATORS.includes(field)) {
             MAP_LOGICAL_OPERATORS[field as LogicalOperator](
-               query,
+               condition,
                (value as unknown[]).map(
                   (el) =>
                      new Brackets((whereBuilder) => this.buildWhereClause(whereBuilder, el, path)),
@@ -153,7 +189,7 @@ export class SqlAdapter implements Adapter<SelectQueryBuilder<object>> {
             )
          } else if (OPERATORS.includes(field) || ARRAY_OPERATORS.includes(field)) {
             MAP_OPERATORS[field as BaseOperator | ArrayOperator]({
-               query,
+               condition,
                databaseType: this.dataSource.driver.options.type,
                alias: path.length > 2 ? R.slice(1, -1, path).join(RELATION_JOINER) : path[0],
                field: R.last(path),
@@ -165,12 +201,12 @@ export class SqlAdapter implements Adapter<SelectQueryBuilder<object>> {
                value,
             })
          } else {
-            this.buildWhereClause(query, value, [...path, field])
+            this.buildWhereClause(condition, value, [...path, field])
          }
       }
    }
 
-   buildOrderByClause(query: SelectQueryBuilder<any>, input: Record<string, any>[], alias: string) {
+   buildOrderByClause(query: SelectQueryBuilder<any>, input: AnyObject[], alias: string) {
       for (const orderBy of input) {
          const [key, value] = Object.entries(flatten(orderBy))[0] as [string, SortDirection]
          const path = key.split('.')
@@ -185,7 +221,6 @@ export class SqlAdapter implements Adapter<SelectQueryBuilder<object>> {
    }
 
    async query<T extends object>(
-      target: Constructor<T>,
       builder: SelectQueryBuilder<object>,
       limit?: number,
    ): Promise<T[]> {
@@ -195,7 +230,6 @@ export class SqlAdapter implements Adapter<SelectQueryBuilder<object>> {
    }
 
    async paginatedQuery<T extends object>(
-      target: Constructor<T>,
       builder: SelectQueryBuilder<object>,
       paginate: PaginationInput,
    ): Promise<Paginated<T>> {

@@ -1,4 +1,3 @@
-import { Vaccination } from './vaccination'
 import { Definition } from 'lib/decorators/definition.decorator'
 import { Property } from 'lib/decorators/property.decorator'
 import { Reference } from 'lib/decorators/reference.decorator'
@@ -6,11 +5,12 @@ import { Owner } from './owner'
 import { InputType, ObjectType } from '@nestjs/graphql'
 import { OutputType, PaginatedOutputType } from 'lib/generators/output.generator'
 import { QueryInputType } from 'lib/generators/query.generator'
-import { BaseEntity, Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
+import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
+import { HealthRecord } from './health-record'
 
 @Definition()
 @Entity({ name: 'cats' })
-export class Cat extends BaseEntity {
+export class Cat {
    @Property()
    @PrimaryGeneratedColumn('uuid')
    id: string
@@ -35,9 +35,9 @@ export class Cat extends BaseEntity {
    @ManyToOne(() => Owner, { orphanedRowAction: 'nullify' })
    owner: Ref<Owner>
 
-   @Reference({ type: () => Vaccination })
-   @OneToMany(() => Vaccination, (vaccination) => vaccination.cat)
-   vaccinations: Vaccination[]
+   @Reference({ type: () => HealthRecord, array: true })
+   @OneToMany(() => HealthRecord, (healthRecord) => healthRecord.cat)
+   healthRecords: Ref<HealthRecord>[]
 }
 
 @ObjectType('Cat')

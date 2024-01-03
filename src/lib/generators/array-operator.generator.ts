@@ -2,7 +2,7 @@ import { Field, InputType } from '@nestjs/graphql'
 import { IsOptional } from 'class-validator'
 import { GraphQLScalarType } from 'graphql'
 import { ARRAY_OPERATORS, ArrayOperator } from 'lib/constants'
-import { DecorateOptions, applyDecorators } from 'lib/decorators/decorate.decorator'
+import { DecorateOptions, applyDecoratorsWithScope } from 'lib/decorators/decorate.decorator'
 import { memorize } from 'lib/utils/memorize'
 import { singular } from 'pluralize'
 import { pascalCase } from 'string-ts'
@@ -37,11 +37,11 @@ export const ArrayOperatorInputType = memorize(
             case 'contains':
             case 'ncontains':
                Field(() => type, { nullable: true })(Placeholder.prototype, operator)
-               applyDecorators(Placeholder, operator, decorators, 'input', false)
+               applyDecoratorsWithScope(Placeholder, operator, decorators, 'input', false)
                break
             case 'overlap':
                Field(() => [type], { nullable: true })(Placeholder.prototype, operator)
-               applyDecorators(Placeholder, operator, decorators, 'input', true)
+               applyDecoratorsWithScope(Placeholder, operator, decorators, 'input', true)
                break
             case 'exists':
                Field(() => Boolean, { nullable: true })(Placeholder.prototype, operator)

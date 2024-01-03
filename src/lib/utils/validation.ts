@@ -29,7 +29,7 @@ export function OneOfObject(group: string, validationOptions?: ValidationOptions
             },
 
             defaultMessage: ({ constraints: [group] }) =>
-               ` with group '${group}' only can one value`,
+               ` with group '${group}' only can have one value`,
          },
       })
    }

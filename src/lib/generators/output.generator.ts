@@ -1,9 +1,10 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql'
 import { Transform, Type } from 'class-transformer'
-import { applyDecorators } from 'lib/decorators/decorate.decorator'
+import { applyDecoratorsWithScope } from 'lib/decorators/decorate.decorator'
 import { DEFINITION_STORAGE } from 'lib/decorators/definition.decorator'
 import { Paginated } from 'lib/interfaces/paginated.interface'
 import { memorize } from 'lib/utils/memorize'
+import { pick } from 'ramda'
 
 const cache = new Map()
 
@@ -26,26 +27,25 @@ export const OutputType = memorize(<T extends object>(target: Constructor<T>) =>
          Transform(({ value }) => (value ? new Date(value) : null))(Placeholder.prototype, key)
       }
 
-      Field(() => (options.array ? [type] : type), {
-         name: options.name,
-         nullable: options.nullable,
-         complexity: options.complexity,
-      })(Placeholder.prototype, key)
+      Field(
+         () => (options.array ? [type] : type),
+         pick(['name', 'nullable', 'complexity', 'description', 'deprecationReason'], options),
+      )(Placeholder.prototype, key)
    }
 
    for (const key in references) {
       const options = references[key]
       const type = OutputType(options.type())
 
-      Field(() => (options.array ? [type] : type), {
-         name: options.name,
-         nullable: options.nullable,
-      })(Placeholder.prototype, key)
+      Field(
+         () => (options.array ? [type] : type),
+         pick(['name', 'nullable', 'description', 'deprecationReason'], options),
+      )(Placeholder.prototype, key)
       Type(() => type)(Placeholder.prototype, key)
    }
 
    for (const key in decorators) {
-      applyDecorators(Placeholder, key, decorators[key], 'output', false)
+      applyDecoratorsWithScope(Placeholder, key, decorators[key], 'output', false)
    }
 
    return Placeholder as Constructor<T>

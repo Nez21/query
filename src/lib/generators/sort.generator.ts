@@ -1,3 +1,4 @@
+import { applyDecorators } from '@nestjs/common'
 import { Field, InputType } from '@nestjs/graphql'
 import { Expose, Type } from 'class-transformer'
 import { ValidateNested } from 'class-validator'
@@ -14,22 +15,27 @@ const cache = new Map()
 export const SortInputType = <T extends object>(
    target: Constructor<T>,
 ): Constructor<SortInput<T>> => {
-   if (cache.has(target.name)) return cache.get(target.name)
-
    const className = `${target.name}SortInput`
+
+   if (cache.has(className)) return cache.get(className)
 
    @InputType(className)
    class Placeholder {}
 
    Object.defineProperty(Placeholder, 'name', { value: className })
-   cache.set(target.name, Placeholder)
+   cache.set(className, Placeholder)
 
    const { properties, references } = DEFINITION_STORAGE.get(target)
 
    for (const [key, options] of Object.entries(properties).filter(([_, val]) => val.sortable)) {
-      Field(() => SortDirection, { nullable: true })(Placeholder.prototype, options.name)
-      OneOfObject('Sort')(Placeholder.prototype, options.name)
-      if (options.name != key) Expose({ name: options.name })(Placeholder.prototype, key)
+      applyDecorators(
+         Field(() => SortDirection, { nullable: true }),
+         OneOfObject('Sort'),
+      )(Placeholder.prototype, options.name)
+
+      if (options.name != key) {
+         Expose({ name: options.name, toClassOnly: true })(Placeholder.prototype, key)
+      }
    }
 
    for (const key in references) {
@@ -37,11 +43,17 @@ export const SortInputType = <T extends object>(
 
       if (!options.array) {
          const subSortType = SortInputType(options.type())
-         Field(() => subSortType, { nullable: true })(Placeholder.prototype, options.name)
-         Type(() => subSortType)(Placeholder.prototype, options.name)
-         ValidateNested()(Placeholder.prototype, options.name)
-         OneOfObject('Sort')(Placeholder.prototype, options.name)
-         if (options.name != key) Expose({ name: options.name })(Placeholder.prototype, key)
+
+         applyDecorators(
+            Field(() => subSortType, { nullable: true }),
+            Type(() => subSortType),
+            ValidateNested(),
+            OneOfObject('Sort'),
+         )(Placeholder.prototype, options.name)
+
+         if (options.name != key) {
+            Expose({ name: options.name, toClassOnly: true })(Placeholder.prototype, key)
+         }
       }
    }
 

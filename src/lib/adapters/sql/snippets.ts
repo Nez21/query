@@ -4,7 +4,7 @@ import { Brackets, WhereExpressionBuilder } from 'typeorm'
 export const MAP_OPERATORS: Record<
    BaseOperator | ArrayOperator,
    (input: {
-      query: WhereExpressionBuilder
+      condition: WhereExpressionBuilder
       databaseType: string
       alias: string
       field: string
@@ -12,37 +12,37 @@ export const MAP_OPERATORS: Record<
       value: unknown
    }) => void
 > = {
-   eq: ({ query, alias, field, key, value }) =>
-      query.andWhere(`${alias}.${field} = :${key}`, { [key]: value }),
-   neq: ({ query, alias, field, key, value }) =>
-      query.andWhere(`${alias}.${field} != :${key}`, { [key]: value }),
-   exists: ({ query, alias, field, value }) =>
-      query.andWhere(`${alias}.${field} IS ${value ? 'NOT' : ''} NULL`),
-   in: ({ query, alias, field, key, value }) =>
-      query.andWhere(`${alias}.${field} = ANY (:${key})`, { [key]: value }),
-   nin: ({ query, alias, field, key, value }) =>
-      query.andWhere(`${alias}.${field} != ALL (:${key})`, { [key]: value }),
-   lt: ({ query, alias, field, key, value }) =>
-      query.andWhere(`${alias}.${field} < :${key}`, { [key]: value }),
-   lte: ({ query, alias, field, key, value }) =>
-      query.andWhere(`${alias}.${field} <= :${key}`, { [key]: value }),
-   gt: ({ query, alias, field, key, value }) =>
-      query.andWhere(`${alias}.${field} > :${key}`, { [key]: value }),
-   gte: ({ query, alias, field, key, value }) =>
-      query.andWhere(`${alias}.${field} >= :${key}`, { [key]: value }),
+   eq: ({ condition, alias, field, key, value }) =>
+      condition.andWhere(`${alias}.${field} = :${key}`, { [key]: value }),
+   neq: ({ condition, alias, field, key, value }) =>
+      condition.andWhere(`${alias}.${field} != :${key}`, { [key]: value }),
+   exists: ({ condition, alias, field, value }) =>
+      condition.andWhere(`${alias}.${field} IS ${value ? 'NOT' : ''} NULL`),
+   in: ({ condition, alias, field, key, value }) =>
+      condition.andWhere(`${alias}.${field} = ANY (:${key})`, { [key]: value }),
+   nin: ({ condition, alias, field, key, value }) =>
+      condition.andWhere(`${alias}.${field} != ALL (:${key})`, { [key]: value }),
+   lt: ({ condition, alias, field, key, value }) =>
+      condition.andWhere(`${alias}.${field} < :${key}`, { [key]: value }),
+   lte: ({ condition, alias, field, key, value }) =>
+      condition.andWhere(`${alias}.${field} <= :${key}`, { [key]: value }),
+   gt: ({ condition, alias, field, key, value }) =>
+      condition.andWhere(`${alias}.${field} > :${key}`, { [key]: value }),
+   gte: ({ condition, alias, field, key, value }) =>
+      condition.andWhere(`${alias}.${field} >= :${key}`, { [key]: value }),
 
-   contains: ({ query, alias, field, key, value }) =>
-      query.andWhere(`:${key} = ANY (${alias}.${field})`, { [key]: value }),
-   ncontains: ({ query, alias, field, key, value }) =>
-      query.andWhere(`:${key} != ALL (${alias}.${field})`, { [key]: value }),
-   overlap: ({ query, alias, field, key, value }) =>
-      query.andWhere(`${alias}.${field} && :${key}`, { [key]: value }),
+   contains: ({ condition, alias, field, key, value }) =>
+      condition.andWhere(`:${key} = ANY (${alias}.${field})`, { [key]: value }),
+   ncontains: ({ condition, alias, field, key, value }) =>
+      condition.andWhere(`:${key} != ALL (${alias}.${field})`, { [key]: value }),
+   overlap: ({ condition, alias, field, key, value }) =>
+      condition.andWhere(`${alias}.${field} && :${key}`, { [key]: value }),
 } as const
 
 export const MAP_LOGICAL_OPERATORS: Record<
    LogicalOperator,
-   (builder: WhereExpressionBuilder, value: Brackets[]) => unknown
+   (condition: WhereExpressionBuilder, brackets: Brackets[]) => unknown
 > = {
-   and: (query, value) => value.forEach((el) => query.andWhere(el)),
-   or: (query, value) => value.forEach((el) => query.orWhere(el)),
+   and: (condition, brackets) => brackets.forEach((el) => condition.andWhere(el)),
+   or: (condition, brackets) => brackets.forEach((el) => condition.orWhere(el)),
 } as const

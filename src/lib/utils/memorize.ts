@@ -20,7 +20,7 @@ const toString = (el: any) => {
 }
 const defaultResolver = (...args: any[]) => JSON.stringify(toString(args))
 
-export const memorize = <Fn extends (...args: any[]) => any>(
+export const memorize = <Fn extends AnyFunction>(
    fn: Fn,
    resolver: (...args: Parameters<Fn>) => unknown = defaultResolver,
 ): Fn => {

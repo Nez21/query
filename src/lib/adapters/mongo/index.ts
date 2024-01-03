@@ -8,9 +8,9 @@ import { flatten } from 'lib/utils/object'
 import mongoose, { Aggregate, Connection, PipelineStage } from 'mongoose'
 import merge, { all as mergeAll } from 'deepmerge'
 import { MAP_LIST_OPERATORS, MAP_LOGICAL_OPERATORS, MAP_OPERATORS } from './snippets'
-import R from 'ramda'
 import { InjectConnection } from '@nestjs/mongoose'
 import { Injectable } from '@nestjs/common'
+import R from 'ramda'
 
 @Injectable()
 export class MongoAdapter implements Adapter<Aggregate<object[]>> {
@@ -18,22 +18,23 @@ export class MongoAdapter implements Adapter<Aggregate<object[]>> {
 
    convert<T extends object>(
       target: Constructor<T>,
-      input: Omit<QueryInput<T>, 'paginate'>,
-      selections?: Record<string, any>,
+      { filter, sort }: Omit<QueryInput<T>, 'paginate'>,
+      selections?: AnyObject,
    ): Aggregate<object[]> {
       const definition = DEFINITION_STORAGE.get(target)
       const model = this.connection.model(definition.name)
 
       const aggregate = model.aggregate(
-         this.buildJoinAndSelectPipeline(definition, model.schema, selections),
+         this.buildQueryPipeline({
+            definition,
+            schema: model.schema,
+            filter: filter as AnyObject,
+            selections,
+         }),
       )
 
-      if (input.filter && !R.isEmpty(input.filter)) {
-         aggregate.match(this.buildFilterPipeline(input.filter as Record<string, any>))
-      }
-
-      if (input.sort?.length) {
-         aggregate.sort(flatten(mergeAll(input.sort)) as Record<string, SortDirection>)
+      if (sort?.length) {
+         aggregate.sort(flatten(mergeAll(sort)) as Record<string, SortDirection>)
       }
 
       aggregate.then = null // Prevent aggregate execute automatically when using await
@@ -41,12 +42,15 @@ export class MongoAdapter implements Adapter<Aggregate<object[]>> {
       return aggregate
    }
 
-   private buildJoinAndSelectPipeline(
-      definition: Definition,
-      schema: mongoose.Schema,
-      selections: Record<string, any>,
-      path: string[] = [],
-   ): Exclude<PipelineStage, PipelineStage.Merge | PipelineStage.Out>[] {
+   private buildQueryPipeline(input: {
+      definition: Definition
+      schema: mongoose.Schema
+      filter: AnyObject
+      selections: AnyObject
+      path?: string[]
+   }): Exclude<PipelineStage, PipelineStage.Merge | PipelineStage.Out>[] {
+      const { definition, schema, filter = {}, selections, path = [] } = input
+
       const pipeline: Exclude<PipelineStage, PipelineStage.Merge | PipelineStage.Out>[] = []
       const selects = Object.keys(definition.properties).filter((key) => selections[key])
       const referenceSelects = {}
@@ -77,14 +81,21 @@ export class MongoAdapter implements Adapter<Aggregate<object[]>> {
             referenceDefinition.references[foreignField]
          ).array
          referenceSelects[key] = '$' + alias
+         let relationFilter: AnyObject
+
+         if (!reference.array) {
+            relationFilter = filter[key]
+            delete filter[key]
+         }
 
          const subDefinition = DEFINITION_STORAGE.get(reference.type())
-         const subPipeline = this.buildJoinAndSelectPipeline(
-            subDefinition,
-            this.connection.model(subDefinition.name).schema,
-            selections[key],
-            [...path, key],
-         )
+         const subPipeline = this.buildQueryPipeline({
+            definition: subDefinition,
+            schema: this.connection.model(subDefinition.name).schema,
+            filter: relationFilter,
+            selections: selections[key],
+            path: [...path, key],
+         })
 
          if (foreignFieldIsArray) {
             subPipeline.unshift({
@@ -105,7 +116,10 @@ export class MongoAdapter implements Adapter<Aggregate<object[]>> {
 
          if (!reference.array) {
             pipeline.push({
-               $unwind: { path: '$' + alias, preserveNullAndEmptyArrays: true },
+               $unwind: {
+                  path: '$' + alias,
+                  preserveNullAndEmptyArrays: !relationFilter && !!reference.nullable,
+               },
             })
          }
       }
@@ -118,11 +132,17 @@ export class MongoAdapter implements Adapter<Aggregate<object[]>> {
          },
       })
 
+      if (filter && !R.isEmpty(filter)) {
+         pipeline.push({
+            $match: this.buildMatchPipeline(filter),
+         })
+      }
+
       return pipeline
    }
 
-   private buildFilterPipeline(input: Record<string, any>, path = []): Record<string, any> {
-      let result: Record<string, any> = {}
+   private buildMatchPipeline(input: AnyObject, path = []): AnyObject {
+      let result: AnyObject = {}
       let type = getFilterType(input)
 
       if (type == 'Scalar') {
@@ -145,7 +165,7 @@ export class MongoAdapter implements Adapter<Aggregate<object[]>> {
             result = merge(
                result,
                MAP_LOGICAL_OPERATORS[type](
-                  arr.map((value) => this.buildFilterPipeline(value, path)),
+                  arr.map((value) => this.buildMatchPipeline(value, path)),
                ),
                mergeConfig,
             )
@@ -156,7 +176,7 @@ export class MongoAdapter implements Adapter<Aggregate<object[]>> {
             result = merge(
                result,
                {
-                  [path.join('.')]: MAP_LIST_OPERATORS[type](this.buildFilterPipeline(value)),
+                  [path.join('.')]: MAP_LIST_OPERATORS[type](this.buildMatchPipeline(value)),
                },
                mergeConfig,
             )
@@ -170,11 +190,7 @@ export class MongoAdapter implements Adapter<Aggregate<object[]>> {
          }
          default: {
             for (const [field, value] of Object.entries(input)) {
-               result = merge(
-                  result,
-                  this.buildFilterPipeline(value, [...path, field]),
-                  mergeConfig,
-               )
+               result = merge(result, this.buildMatchPipeline(value, [...path, field]), mergeConfig)
             }
             break
          }
@@ -183,18 +199,13 @@ export class MongoAdapter implements Adapter<Aggregate<object[]>> {
       return result
    }
 
-   async query<T extends object>(
-      _: Constructor<T>,
-      builder: Aggregate<object[]>,
-      limit?: number,
-   ): Promise<T[]> {
+   async query<T extends object>(builder: Aggregate<object[]>, limit?: number): Promise<T[]> {
       if (limit > 0) builder.limit(limit)
 
       return (await builder.exec()) as T[]
    }
 
    async paginatedQuery<T extends object>(
-      _: Constructor<T>,
       builder: Aggregate<object[]>,
       paginate: PaginationInput,
    ): Promise<Paginated<T>> {

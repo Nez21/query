@@ -17,10 +17,6 @@ export class Owner extends BaseEntity {
    name: string
 
    @Property()
-   @Column({ type: 'smallint' })
-   age: number
-
-   @Property()
    @Column({ type: 'text' })
    address: string
 

@@ -1,3 +1,4 @@
+import { LIST_OPERATORS, ListOperator } from 'lib/constants'
 import { RelationMetadata } from 'typeorm/metadata/RelationMetadata'
 
 export const getJoinCondition = (
@@ -5,17 +6,53 @@ export const getJoinCondition = (
    relationAlias: string,
    relation: RelationMetadata,
 ) => {
-   return (
-      relation.joinColumns.length
-         ? relation.joinColumns.map((joinColumn) => {
-              const sourceColumn = `${alias}.${joinColumn.givenDatabaseName}`
-              const targetColumn = `${relationAlias}.${joinColumn.referencedColumn.propertyName}`
-              return `${sourceColumn} = ${targetColumn}`
-           })
-         : relation.inverseRelation.joinColumns.map((joinColumn) => {
-              const sourceColumn = `${alias}.${joinColumn.referencedColumn.propertyName}`
-              const targetColumn = `${relationAlias}.${joinColumn.givenDatabaseName}`
-              return `${sourceColumn} = ${targetColumn}`
-           })
-   ).join(' AND ')
+   if (relation.isManyToOne || relation.isOneToOneOwner) {
+      return relation.joinColumns
+         .map((joinColumn) => {
+            const sourceColumn = `${alias}.${joinColumn.propertyName}`
+            const targetColumn = `${relationAlias}.${joinColumn.referencedColumn.propertyName}`
+            return `${sourceColumn} = ${targetColumn}`
+         })
+         .join(' AND ')
+   }
+
+   if (relation.isOneToMany || relation.isOneToOneNotOwner) {
+      return relation.inverseRelation.joinColumns
+         .map((joinColumn) => {
+            const sourceColumn = `${alias}.${joinColumn.referencedColumn.propertyName}`
+            const targetColumn = `${relationAlias}.${joinColumn.propertyName}`
+            return `${sourceColumn} = ${targetColumn}`
+         })
+         .join(' AND ')
+   }
+
+   return relation.joinColumns
+      .map((joinColumn) => {
+         const sourceColumn = `${alias}.${joinColumn.referencedColumn.propertyName}`
+         const targetColumn = `${relation.joinTableName}.${joinColumn.propertyName}`
+         return `${sourceColumn} = ${targetColumn}`
+      })
+      .concat(
+         relation.inverseJoinColumns.map((joinColumn) => {
+            const sourceColumn = `${relation.joinTableName}.${joinColumn.propertyName}`
+            const targetColumn = `${relationAlias}.${joinColumn.referencedColumn.propertyName}`
+            return `${sourceColumn} = ${targetColumn}`
+         }),
+      )
+      .join(' AND ')
+}
+
+export const extractRelationFilter = (
+   filter: AnyObject,
+   key: string,
+): { value: AnyObject; listOperator?: ListOperator } => {
+   const value = filter[key]
+   const listOperator = value ? LIST_OPERATORS.find((el) => el in value) : null
+   delete filter[key]
+
+   if (listOperator) {
+      return { value: Object.values(value)[0], listOperator }
+   }
+
+   return { value, listOperator }
 }

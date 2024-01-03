@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common'
 import { GraphQLModule } from '@nestjs/graphql'
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo'
 import { typeDefs as scalarTypeDefs } from 'graphql-scalars'
-import { ComplexityPlugin } from 'lib/plugins/complexity.plugin'
 import { SqlAPIModule } from 'api/sql/api.module'
 
 @Module({
@@ -11,7 +10,7 @@ import { SqlAPIModule } from 'api/sql/api.module'
          driver: ApolloDriver,
          autoSchemaFile: true,
          typeDefs: [...scalarTypeDefs],
-         plugins: [new ComplexityPlugin()],
+         // plugins: [new ComplexityPlugin()],
       }),
       // MongoAPIModule,
       // ElasticsearchAPIModule,

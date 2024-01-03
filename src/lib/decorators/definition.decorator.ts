@@ -7,6 +7,10 @@ import { defaultComposer } from 'default-composer'
 
 export interface DefinitionOptions {
    name: string
+   defaults: {
+      filterable: boolean
+      sortable: boolean
+   }
 }
 
 export type Definition = DefinitionOptions & {
@@ -17,9 +21,25 @@ export type Definition = DefinitionOptions & {
 
 export const DEFINITION_STORAGE = new Map<Constructor<object>, Definition>()
 
-export function Definition(options?: DefinitionOptions) {
+export function Definition(options?: DeepPartial<DefinitionOptions>) {
    return (target: Constructor<object>) => {
+      options = defaultComposer<DefinitionOptions>(
+         {
+            name: target.name,
+            defaults: {
+               filterable: true,
+               sortable: true,
+            },
+         },
+         (options ?? {}) as DefinitionOptions,
+      )
+
       const properties = Metadata.getAllPropertyMetadata<PropertyOptions>(target, META_KEY.Property)
+
+      for (const key in properties) {
+         properties[key] = defaultComposer<PropertyOptions>(options.defaults, properties[key])
+      }
+
       const references = Metadata.getAllPropertyMetadata<ReferenceOptions>(
          target,
          META_KEY.Reference,
@@ -30,7 +50,7 @@ export function Definition(options?: DefinitionOptions) {
       )
 
       DEFINITION_STORAGE.set(target, {
-         ...defaultComposer<DefinitionOptions>({ name: target.name }, options ?? {}),
+         ...defaultComposer<DefinitionOptions>({ name: target.name }, options as DefinitionOptions),
          properties,
          references,
          decorators,

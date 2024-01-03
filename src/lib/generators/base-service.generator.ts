@@ -7,30 +7,25 @@ import { plainToInstance } from 'class-transformer'
 import { OutputType } from './output.generator'
 import { parseResolveInfo } from 'graphql-parse-resolve-info'
 import { intoSelections } from 'lib/utils/graphql'
-import { CONTEXT, GqlExecutionContext } from '@nestjs/graphql'
+import { CONTEXT } from '@nestjs/graphql'
 
-export const BaseService = <
-   TModel extends object,
-   TQuery extends QueryInput<TModel>,
-   TBuilder,
-   TContext = GqlExecutionContext,
->(
+export const BaseService = <TModel extends object, TQuery extends QueryInput<TModel>, TBuilder>(
    target: Constructor<TModel>,
    adapterType: Constructor<Adapter<TBuilder>>,
-   contextFactory: (ctx: GqlExecutionContext) => TContext = (ctx) => ctx as TContext,
+   contextFactory = (ctx: AnyObject) => ctx,
 ) => {
    @Injectable({ scope: Scope.REQUEST })
    class Placeholder {
-      public ctx: TContext
+      public ctx: ReturnType<typeof contextFactory>
 
       constructor(
          @Inject(adapterType) public adapter: Adapter<TBuilder>,
-         @Inject(CONTEXT) gqlCtx: GqlExecutionContext,
+         @Inject(CONTEXT) ctx: AnyObject,
       ) {
-         this.ctx = contextFactory(gqlCtx)
+         this.ctx = contextFactory(ctx)
       }
 
-      async baseQuery(input: Omit<TQuery, 'paginate'>, selections: Record<string, any>) {
+      async baseQuery(input: Omit<TQuery, 'paginate'>, selections: AnyObject) {
          input = await this.beforeQuery(input as TQuery)
          let builder = this.adapter.convert(target, input, selections)
          builder = await this.beforeRawQuery(builder)
@@ -49,7 +44,7 @@ export const BaseService = <
       ): Promise<TModel[]> {
          const selections = this.getSelections(info, false)
          const builder = await this.baseQuery(input, selections)
-         let items = await this.adapter.query(target, builder, limit)
+         let items = await this.adapter.query<TModel>(builder, limit)
          items = await this.afterQuery(
             items.map((item) => plainToInstance(OutputType(target), item)),
          )
@@ -64,7 +59,7 @@ export const BaseService = <
 
          const selections = this.getSelections(info, true)
          const builder = await this.baseQuery(input, selections)
-         const result = await this.adapter.paginatedQuery(target, builder, input.paginate)
+         const result = await this.adapter.paginatedQuery<TModel>(builder, input.paginate)
          result.items = await this.afterQuery(
             result.items.map((item) => plainToInstance(OutputType(target), item)),
          )

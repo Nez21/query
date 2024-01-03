@@ -2,7 +2,7 @@ import { Field, InputType } from '@nestjs/graphql'
 import { BaseOperator } from 'lib/constants'
 import { GraphQLScalarType } from 'graphql'
 import { memorize } from 'lib/utils/memorize'
-import { DecorateOptions, applyDecorators } from 'lib/decorators/decorate.decorator'
+import { DecorateOptions, applyDecoratorsWithScope } from 'lib/decorators/decorate.decorator'
 import { pascalCase } from 'string-ts'
 import { IsOptional } from 'class-validator'
 
@@ -72,11 +72,11 @@ export const OperatorInputType = memorize(
             case 'in':
             case 'nin':
                Field(() => [type], { nullable: true })(Placeholder.prototype, operator)
-               applyDecorators(Placeholder, operator, decorators, 'input', true)
+               applyDecoratorsWithScope(Placeholder, operator, decorators, 'input', true)
                break
             default:
                Field(() => type, { nullable: true })(Placeholder.prototype, operator)
-               applyDecorators(Placeholder, operator, decorators, 'input', false)
+               applyDecoratorsWithScope(Placeholder, operator, decorators, 'input', false)
                break
          }
 

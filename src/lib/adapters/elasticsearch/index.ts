@@ -18,47 +18,40 @@ import { mergeConfig } from 'lib/constants'
 import { ESPropMetadata, ESRefMetadata } from './types'
 import { ElasticsearchService } from '@nestjs/elasticsearch'
 import { PropertyOptions } from 'lib/decorators/property.decorator'
+import { ReferenceOptions } from 'lib/decorators/reference.decorator'
 
 @Injectable()
 export class ElasticsearchAdapter
-   implements
-      Adapter<{
-         indexName: string
-         builder: RequestBodySearch
-      }>
+   implements Adapter<{ indexName: string; builder: RequestBodySearch }>
 {
    constructor(private service: ElasticsearchService) {}
 
    convert<T extends object>(
       target: Constructor<T>,
-      input: Omit<QueryInput<T>, 'paginate'>,
-      selections: Record<string, any>,
+      { filter, sort }: Omit<QueryInput<T>, 'paginate'>,
+      selections: AnyObject,
    ): { indexName: string; builder: RequestBodySearch } {
       const definition = DEFINITION_STORAGE.get(target)
       const builder = new RequestBodySearch()
 
       builder.source(Object.keys(flatten(selections)))
 
-      if (input.filter && !R.isEmpty(input.filter)) {
-         const obj = this.buildQuery(definition, input.filter as Record<string, any>)
+      if (filter && !R.isEmpty(filter)) {
+         const obj = this.buildQuery(definition, filter as AnyObject)
          const query = new Query(Object.keys(obj)[0])
          query['_body'] = obj
          builder.query(query)
       }
 
-      if (input.sort?.length) {
-         builder.sorts(this.buildSort(definition, input.sort))
+      if (sort?.length) {
+         builder.sorts(this.buildSort(definition, sort))
       }
 
       return { indexName: definition.name, builder }
    }
 
-   buildQuery(
-      definition: Definition,
-      input: Record<string, any>,
-      path: string[] = [],
-   ): Record<string, any> {
-      let result: Record<string, any> = {}
+   buildQuery(definition: Definition, input: AnyObject, path: string[] = []): AnyObject {
+      let result: AnyObject = {}
       let type = getFilterType(input)
 
       if (type == 'Scalar') {
@@ -99,14 +92,11 @@ export class ElasticsearchAdapter
                   R.last(path).split('.').pop()
                ] as PropertyOptions<ESPropMetadata>
                let query = MAP_OPERATORS[type](value, R.last(path), options.metadata.text)
+               let nestedPath = path[0]
 
-               if (path.length > 1) {
-                  let nestedPath = path[0]
-
-                  for (let i = 1; i < path.length; i++) {
-                     query = { nested: { path: nestedPath, query } }
-                     nestedPath += `.${path[i]}`
-                  }
+               for (let i = 1; i < path.length; i++) {
+                  query = { nested: { path: nestedPath, query } }
+                  nestedPath += `.${path[i]}`
                }
 
                result = merge(result, query, mergeConfig)
@@ -115,7 +105,7 @@ export class ElasticsearchAdapter
          }
          default: {
             for (const [field, value] of Object.entries(input)) {
-               const options = definition.references[field] as PropertyOptions<ESRefMetadata>
+               const options = definition.references[field] as ReferenceOptions<ESRefMetadata>
 
                result = merge(
                   result,
@@ -126,7 +116,7 @@ export class ElasticsearchAdapter
                      value,
                      !path.length || options?.metadata?.nested
                         ? [...path, field]
-                        : [...path.slice(0, path.length - 1), `${R.last(path)}.${field}`],
+                        : [...R.slice(0, -1, path), `${R.last(path)}.${field}`],
                   ),
                   mergeConfig,
                )
@@ -138,7 +128,7 @@ export class ElasticsearchAdapter
       return result
    }
 
-   buildSort(definition: Definition, input: Record<string, any>[]): Sort[] {
+   buildSort(definition: Definition, input: AnyObject[]): Sort[] {
       return input.map((el) => {
          const [field, order] = Object.entries(flatten(el))[0] as [string, string]
          const options = getOptionByPath<ESPropMetadata>(definition, field.split('.'))
@@ -148,7 +138,6 @@ export class ElasticsearchAdapter
    }
 
    async query<T extends object>(
-      target: Constructor<T>,
       { indexName, builder }: { indexName: string; builder: RequestBodySearch },
       limit?: number,
    ): Promise<T[]> {
@@ -163,7 +152,6 @@ export class ElasticsearchAdapter
    }
 
    async paginatedQuery<T extends object>(
-      target: Constructor<T>,
       { indexName, builder }: { indexName: string; builder: RequestBodySearch },
       paginate: PaginationInput,
    ): Promise<Paginated<T>> {

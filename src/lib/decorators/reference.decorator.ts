@@ -2,15 +2,17 @@ import { defaultComposer } from 'default-composer'
 import { META_KEY } from 'lib/constants'
 import { Metadata } from 'lib/utils/metadata'
 
-export interface ReferenceOptions<T extends Record<string, any> = Record<string, any>> {
+export interface ReferenceOptions<T extends AnyObject = AnyObject> {
    name: string
    type: () => Constructor<object>
    array: boolean
    nullable: 'items' | 'itemsAndList' | boolean
    metadata: T
+   description?: string
+   deprecationReason?: string
 }
 
-export function Reference<T extends Record<string, any> = Record<string, any>>(
+export function Reference<T extends AnyObject = AnyObject>(
    options: Partial<ReferenceOptions<T>> & Pick<ReferenceOptions<T>, 'type'>,
 ) {
    return (target: object, propertyKey: string) => {

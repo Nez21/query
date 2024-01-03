@@ -3,7 +3,7 @@ import { GraphQLScalarType } from 'graphql'
 import { ARRAY_OPERATORS, ArrayOperator, BaseOperator, META_KEY } from 'lib/constants'
 import { Metadata } from 'lib/utils/metadata'
 
-export interface PropertyOptions<T extends Record<string, any> = Record<string, any>> {
+export interface PropertyOptions<T extends AnyObject = AnyObject> {
    name: string
    type: () => Constructor | GraphQLScalarType
    filterable: boolean | BaseOperator[] | ArrayOperator[]
@@ -12,11 +12,11 @@ export interface PropertyOptions<T extends Record<string, any> = Record<string, 
    complexity: number
    array: boolean
    metadata: T
+   description?: string
+   deprecationReason?: string
 }
 
-export function Property<T extends Record<string, any> = Record<string, any>>(
-   options?: Partial<PropertyOptions<T>>,
-) {
+export function Property<T extends AnyObject = AnyObject>(options?: Partial<PropertyOptions<T>>) {
    return (target: object, propertyKey: string) => {
       const designType = Reflect.getMetadata(
          META_KEY.DesignType,
@@ -30,7 +30,13 @@ export function Property<T extends Record<string, any> = Record<string, any>>(
             Array.isArray(options.filterable) &&
             array != options.filterable.every((el) => ARRAY_OPERATORS.includes(el))
          ) {
-            throw new Error()
+            throw new Error(
+               `${propertyKey}: ${
+                  array
+                     ? 'BasicOperator is only used on primitive types / date'
+                     : 'ArrayOperator is only used on array types'
+               }`,
+            )
          }
       }
 
@@ -38,8 +44,7 @@ export function Property<T extends Record<string, any> = Record<string, any>>(
          {
             type: () => designType,
             name: propertyKey,
-            filterable: true,
-            sortable: !array,
+            sortable: array ? false : undefined,
             nullable: true,
             complexity: 1,
             array,

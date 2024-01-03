@@ -16,7 +16,7 @@ export function Decorate(
       Metadata.append(target, META_KEY.Decorate, { fn, ...options }, propertyKey)
 }
 
-export const applyDecorators = (
+export const applyDecoratorsWithScope = (
    target: Constructor<object>,
    propertyKey: string,
    decorators: DecorateOptions[],
