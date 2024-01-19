@@ -27,10 +27,8 @@ export const ArrayOperatorInputType = memorize(
       class Placeholder {}
 
       Object.defineProperty(Placeholder, 'name', { value: className })
-      const operators: ArrayOperator[] =
-         typeof filterable == 'boolean' || !filterable.length
-            ? (ARRAY_OPERATORS as unknown as ArrayOperator[])
-            : filterable
+      const operators: readonly ArrayOperator[] =
+         typeof filterable == 'boolean' || !filterable.length ? ARRAY_OPERATORS : filterable
 
       for (const operator of operators) {
          switch (operator) {
@@ -47,7 +45,7 @@ export const ArrayOperatorInputType = memorize(
                Field(() => Boolean, { nullable: true })(Placeholder.prototype, operator)
                break
             default:
-               throw new Error()
+               throw new Error('Unhandled operator')
          }
 
          IsOptional()(Placeholder.prototype, operator)

@@ -61,7 +61,7 @@ export const OperatorInputType = memorize(
       operators ??= mapTypeToDefault(type)
 
       if (operators.length == 1 && operators[0] == 'eq') {
-         return type as unknown as Constructor<OperatorInput<T>>
+         return type as Constructor<OperatorInput<T>>
       }
 
       for (const operator of operators) {

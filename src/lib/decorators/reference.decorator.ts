@@ -8,6 +8,7 @@ export interface ReferenceOptions<T extends AnyObject = AnyObject> {
    array: boolean
    nullable: 'items' | 'itemsAndList' | boolean
    metadata: T
+   complexFilterable: boolean
    description?: string
    deprecationReason?: string
 }
@@ -27,7 +28,7 @@ export function Reference<T extends AnyObject = AnyObject>(
       Reflect.defineMetadata(
          META_KEY.Reference,
          defaultComposer<ReferenceOptions>(
-            { name: propertyKey, array, nullable: true, metadata: {} },
+            { name: propertyKey, array, nullable: true, complexFilterable: false, metadata: {} },
             options ?? {},
          ),
          target,

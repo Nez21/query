@@ -100,29 +100,31 @@ export const FilterInputType = <T extends object>(
       }
    }
 
-   if (withReference) {
-      for (const key in references) {
-         const options = references[key]
+   for (const key in references) {
+      const options = references[key]
 
-         const type = options.type()
-         const subFilterType = options.array ? ListFilterInputType(type) : FilterInputType(type)
+      if (withReference && !options.complexFilterable) {
+         continue
+      }
 
-         Field(() => subFilterType, {
-            nullable: true,
-            description: options.description,
-            deprecationReason: options.deprecationReason,
-         })(Placeholder.prototype, options.name)
+      const type = options.type()
+      const subFilterType = options.array ? ListFilterInputType(type) : FilterInputType(type)
 
-         applyDecorators(
-            Type(() => subFilterType),
-            ValidateNested({ each: options.array }),
-            IsOptional(),
-            IsNotEmptyObject({ nullable: false }),
-         )(Placeholder.prototype, key)
+      Field(() => subFilterType, {
+         nullable: true,
+         description: options.description,
+         deprecationReason: options.deprecationReason,
+      })(Placeholder.prototype, options.name)
 
-         if (options.name != key) {
-            Expose({ name: options.name, toClassOnly: true })(Placeholder.prototype, key)
-         }
+      applyDecorators(
+         Type(() => subFilterType),
+         ValidateNested({ each: options.array }),
+         IsOptional(),
+         IsNotEmptyObject({ nullable: false }),
+      )(Placeholder.prototype, key)
+
+      if (options.name != key) {
+         Expose({ name: options.name, toClassOnly: true })(Placeholder.prototype, key)
       }
    }
 

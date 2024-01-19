@@ -213,7 +213,7 @@ export class MongoAdapter implements Adapter<Aggregate<object[]>> {
          builder.facet({
             items: [{ $skip: (paginate.page - 1) * paginate.size }, { $limit: paginate.size }],
             totalItems: [{ $count: 'count' }],
-         }) as unknown as Aggregate<{ items: any[]; totalItems: { count: number }[] }[]>
+         }) as Aggregate<{ items: any[]; totalItems: { count: number }[] }[]>
       ).exec()
 
       const items = result?.items ?? []
