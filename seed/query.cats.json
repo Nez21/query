@@ -1,0 +1,182 @@
+[{
+  "_id": {
+    "$oid": "61e8771bfc13ae4b0e000011"
+  },
+  "name": "Whiskers",
+  "breed": "Siamese",
+  "color": "Cream",
+  "vaccinations": [
+    {
+      "name": "Rabies",
+      "date": {
+        "$date": "2023-03-15T00:00:00.000Z"
+      }
+    },
+    {
+      "name": "FVRCP",
+      "date": {
+        "$date": "2023-02-20T00:00:00.000Z"
+      }
+    }
+  ],
+  "birthDate": {
+    "$date": "2019-05-12T00:00:00.000Z"
+  },
+  "owner": {
+    "$oid": "61e8771bfc13ae4b0e000001"
+  }
+},
+{
+  "_id": {
+    "$oid": "61e8771bfc13ae4b0e000012"
+  },
+  "name": "Fluffy",
+  "breed": "Persian",
+  "color": "White",
+  "vaccinations": [
+    {
+      "name": "Rabies",
+      "date": {
+        "$date": "2023-01-10T00:00:00.000Z"
+      }
+    }
+  ],
+  "birthDate": {
+    "$date": "2022-07-04T00:00:00.000Z"
+  },
+  "owner": {
+    "$oid": "61e8771bfc13ae4b0e000001"
+  }
+},
+{
+  "_id": {
+    "$oid": "61e8771bfc13ae4b0e000021"
+  },
+  "name": "Mittens",
+  "breed": "Maine Coon",
+  "color": "Tabby",
+  "vaccinations": [
+    {
+      "name": "FVRCP",
+      "date": {
+        "$date": "2023-03-10T00:00:00.000Z"
+      }
+    }
+  ],
+  "owner": {
+    "$oid": "61e8771bfc13ae4b0e000002"
+  },
+  "birthDate": {
+    "$date": "2020-09-18T00:00:00.000Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "61e8771bfc13ae4b0e000022"
+  },
+  "name": "Buddy",
+  "breed": "Scottish Fold",
+  "color": "Gray",
+  "vaccinations": [
+    {
+      "name": "Rabies",
+      "date": {
+        "$date": "2023-02-10T00:00:00.000Z"
+      }
+    }
+  ],
+  "birthDate": {
+    "$date": "2021-02-25T00:00:00.000Z"
+  },
+  "owner": {
+    "$oid": "61e8771bfc13ae4b0e000002"
+  }
+},
+{
+  "_id": {
+    "$oid": "61e8771bfc13ae4b0e000031"
+  },
+  "name": "Spike",
+  "breed": "Bengal",
+  "color": "Spotted",
+  "vaccinations": [
+    {
+      "name": "FVRCP",
+      "date": {
+        "$date": "2023-04-05T00:00:00.000Z"
+      }
+    }
+  ],
+  "birthDate": {
+    "$date": "2021-11-08T00:00:00.000Z"
+  },
+  "owner": {
+    "$oid": "61e8771bfc13ae4b0e000003"
+  }
+},
+{
+  "_id": {
+    "$oid": "61e8771bfc13ae4b0e000041"
+  },
+  "name": "Leo",
+  "breed": "Ragdoll",
+  "color": "Blue Bicolor",
+  "vaccinations": [
+    {
+      "name": "Rabies",
+      "date": {
+        "$date": "2023-05-20T00:00:00.000Z"
+      }
+    }
+  ],
+  "birthDate": {
+    "$date": "2021-04-15T00:00:00.000Z"
+  },
+  "owner": {
+    "$oid": "61e8771bfc13ae4b0e000004"
+  }
+},
+{
+  "_id": {
+    "$oid": "61e8771bfc13ae4b0e000051"
+  },
+  "name": "Shadow",
+  "breed": "Russian Blue",
+  "color": "Gray",
+  "vaccinations": [
+    {
+      "name": "FVRCP",
+      "date": {
+        "$date": "2023-06-12T00:00:00.000Z"
+      }
+    }
+  ],
+  "birthDate": {
+    "$date": "2022-01-30T00:00:00.000Z"
+  },
+  "owner": {
+    "$oid": "61e8771bfc13ae4b0e000005"
+  }
+},
+{
+  "_id": {
+    "$oid": "61e8771bfc13ae4b0e000052"
+  },
+  "name": "Mocha",
+  "breed": "Sphynx",
+  "color": "Chocolate",
+  "vaccinations": [
+    {
+      "name": "Rabies",
+      "date": {
+        "$date": "2023-02-28T00:00:00.000Z"
+      }
+    }
+  ],
+  "birthDate": {
+    "$date": "2020-12-05T00:00:00.000Z"
+  },
+  "owner": {
+    "$oid": "61e8771bfc13ae4b0e000005"
+  }
+}]

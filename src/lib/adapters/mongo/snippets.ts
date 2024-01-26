@@ -19,11 +19,7 @@ export const MAP_OPERATORS: Record<BaseOperator | ArrayOperator, (value: unknown
 export const MAP_LIST_OPERATORS: Record<ListOperator, (value: unknown) => unknown> = {
    all: (value) => {
       const [key, query] = Object.entries(value)[0]
-      return {
-         $not: {
-            $elemMatch: { [key]: { $not: query } },
-         },
-      }
+      return { $not: { $elemMatch: { [key]: { $not: query } } } }
    },
    any: (query) => ({ $elemMatch: query }),
 } as const

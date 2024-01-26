@@ -1,0 +1,27 @@
+services:
+   mongodb:
+      container_name: mongodb
+      image: mongo:latest
+      environment:
+         MONGO_INITDB_ROOT_USERNAME: root
+         MONGO_INITDB_ROOT_PASSWORD: Abcd1234
+         MONGO_INITDB_DATABASE: query
+      ports:
+         - '27017:27017'
+      networks:
+         - mongo
+
+   mongo-seed:
+      build:
+         context: ./seed
+         dockerfile: Dockerfile
+         args:
+            - DATABASE_URI=mongodb://mongodb:27017/query?authSource=admin
+            - USERNAME=root
+            - PASSWORD=Abcd1234
+      depends_on:
+         - mongodb
+      networks:
+         - mongo
+networks:
+   mongo:

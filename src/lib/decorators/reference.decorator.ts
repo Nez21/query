@@ -14,7 +14,7 @@ export interface ReferenceOptions<T extends AnyObject = AnyObject> {
 }
 
 export function Reference<T extends AnyObject = AnyObject>(
-   options: Partial<ReferenceOptions<T>> & Pick<ReferenceOptions<T>, 'type'>,
+   options: Partial<Omit<ReferenceOptions<T>, 'array'>> & Pick<ReferenceOptions<T>, 'type'>,
 ) {
    return (target: object, propertyKey: string) => {
       const designType = Reflect.getMetadata(

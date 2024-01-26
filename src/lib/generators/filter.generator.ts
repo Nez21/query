@@ -103,7 +103,7 @@ export const FilterInputType = <T extends object>(
    for (const key in references) {
       const options = references[key]
 
-      if (withReference && !options.complexFilterable) {
+      if (!withReference && !options.complexFilterable) {
          continue
       }
 

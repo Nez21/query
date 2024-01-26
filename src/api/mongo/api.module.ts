@@ -9,7 +9,7 @@ import { MongoAdapter } from 'lib/adapters/mongo'
 
 @Module({
    imports: [
-      MongooseModule.forRoot('mongodb://localhost:27017/query'),
+      MongooseModule.forRoot('mongodb://root:Abcd1234@localhost:27017/query?authSource=admin'),
       MongooseModule.forFeature([
          { name: Cat.name, schema: CatSchema },
          { name: Owner.name, schema: OwnerSchema },

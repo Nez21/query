@@ -40,7 +40,7 @@ export class HealthRecord {
    @ManyToOne(() => Cat)
    cat: Ref<Cat>
 
-   @Reference({ type: () => Vaccination, array: true })
+   @Reference({ type: () => Vaccination })
    @ManyToMany(() => Vaccination)
    @JoinTable({ name: 'map_health_record_vaccination' })
    vaccinations: Ref<Vaccination>[]

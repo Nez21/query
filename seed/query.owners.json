@@ -1,0 +1,63 @@
+[{
+  "_id": {
+    "$oid": "61e8771bfc13ae4b0e000001"
+  },
+  "name": "John",
+  "age": 35,
+  "address": "123 Main St",
+  "email": "john@example.com",
+  "phoneNumbers": [
+    "123-456-7890",
+    "987-654-3210"
+  ]
+},
+{
+  "_id": {
+    "$oid": "61e8771bfc13ae4b0e000002"
+  },
+  "name": "Alice",
+  "age": 28,
+  "address": "456 Elm St",
+  "email": "alice@example.com",
+  "phoneNumbers": [
+    "555-1234",
+    "999-8765"
+  ]
+},
+{
+  "_id": {
+    "$oid": "61e8771bfc13ae4b0e000003"
+  },
+  "name": "Bob",
+  "age": 42,
+  "address": "789 Oak St",
+  "email": "bob@example.com",
+  "phoneNumbers": [
+    "111-2222"
+  ]
+},
+{
+  "_id": {
+    "$oid": "61e8771bfc13ae4b0e000004"
+  },
+  "name": "Emily",
+  "age": 30,
+  "address": "987 Pine St",
+  "email": "emily@example.com",
+  "phoneNumbers": [
+    "777-8888",
+    "666-5555"
+  ]
+},
+{
+  "_id": {
+    "$oid": "61e8771bfc13ae4b0e000005"
+  },
+  "name": "David",
+  "age": 45,
+  "address": "654 Birch St",
+  "email": "david@example.com",
+  "phoneNumbers": [
+    "123-9876"
+  ]
+}]

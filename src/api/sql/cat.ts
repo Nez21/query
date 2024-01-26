@@ -35,7 +35,7 @@ export class Cat {
    @ManyToOne(() => Owner, { orphanedRowAction: 'nullify' })
    owner: Ref<Owner>
 
-   @Reference({ type: () => HealthRecord, array: true })
+   @Reference({ type: () => HealthRecord })
    @OneToMany(() => HealthRecord, (healthRecord) => healthRecord.cat)
    healthRecords: Ref<HealthRecord>[]
 }
